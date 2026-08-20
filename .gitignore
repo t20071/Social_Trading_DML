@@ -1,0 +1,44 @@
+# === Excluded data & large files ===
+trader_data_exl.csv
+notebooks/trader_data_exl.csv
+
+# === Excluded folders ===
+data/
+Documentation/
+evn/
+
+# === Excluded scripts/docs ===
+report.md
+convert_to_docx.py
+New_report_updated.docx
+~\.docx
+
+# === Python cache ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# === Jupyter ===
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# === Virtual environments ===
+venv/
+env/
+.env/
+*.egg-info/
+
+# === OS & editor ===
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# === Build & dist ===
+build/
+dist/
+*.egg
