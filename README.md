@@ -10,11 +10,11 @@
 
 ## Overview
 
-This project investigates the **causal effect of self-trading intensity on trader financial gains** in the context of social trading platforms. Using a rich trader-week panel dataset (~1.2M observations from 26,580 traders over 46 weeks), the study applies **Double Machine Learning (DML)**, **within-trader fixed effects**, and **CausalForestDML** to answer a fundamental question:
+This project investigates the **causal effect of self-trading intensity on trader financial gains** on social trading platforms. Applied to a panel of **1,196,100 trader-week observations** from 26,580 traders over 46 weeks, it uses **Double Machine Learning (DML)**, **within-trader fixed effects**, and **CausalForestDML** to answer:
 
 > **Does self-trading causally hurt or help a trader's gains on a social trading platform?**
 
-**Key Finding:** Self-trading has a **statistically significant negative causal effect** on trader gains. Each additional self-trade in a given week reduces gains by approximately **$0.59** (95% CI: [-0.69, -0.49]), robust across all 24 specification checks.
+**Key Finding:** Each additional self-trade per week reduces trader gains by approximately **$0.59** (95% CI: [-0.69, -0.49]), robust across all 24 specification checks.
 
 ---
 
@@ -23,45 +23,35 @@ This project investigates the **causal effect of self-trading intensity on trade
 ```
 .
 ├── src/                        # Core analysis modules
-│   ├── __init__.py             # Package metadata & version
-│   ├── data_loading.py         # Data ingestion, cleaning & verification
-│   ├── features.py             # Feature engineering & lag construction
-│   ├── treatment_outcome.py    # Treatment/outcome construction & demeaning
-│   ├── models.py               # OLS, LinearDML (ATE), CausalForestDML (CATE)
-│   ├── robustness.py           # Robustness grid, overlap checks, DoWhy refutations
-│   └── viz.py                  # Journal-quality figure generation
+│   ├── __init__.py             # Package entry point and version (v1.0.0)
+│   ├── data_loading.py         # Loads, cleans, and validates the XTrader CSV dataset
+│   ├── features.py             # Builds lagged confounders, tenure, and country dummies
+│   ├── treatment_outcome.py    # Constructs treatment/outcome variables and applies within-trader demeaning
+│   ├── models.py               # Fits Naive OLS, LinearDML (ATE), and CausalForestDML (CATE)
+│   ├── robustness.py           # Runs 24-specification robustness grid and DoWhy refutation tests
+│   └── viz.py                  # Generates all journal-quality figures (300 dpi PNG + PDF)
 │
 ├── notebooks/
-│   ├── 01_eda.ipynb            # Exploratory data analysis
-│   ├── 02_main_results.ipynb   # Main causal estimates
-│   └── 03_robustness.ipynb     # Robustness & sensitivity analysis
+│   ├── 01_eda.ipynb            # Exploratory data analysis: distributions, missingness, panel structure
+│   ├── 02_main_results.ipynb   # Main causal estimates: OLS, LinearDML, CausalForest results
+│   └── 03_robustness.ipynb     # Robustness grid, overlap diagnostics, and DoWhy refutations
 │
-├── figures/                    # Generated figures (PNG + PDF, 300 dpi)
-│   ├── fig1_sample_flow.png
-│   ├── fig2_causal_dag.png
-│   ├── fig3_forest_comparison.png
-│   ├── fig4_cate_distribution.png
-│   ├── fig5_heterogeneity.png
-│   ├── fig6_feature_importances.png
-│   └── fig7_spec_curve.png
-│
-├── data/
-│   └── processed/              # Cleaned & processed datasets
+├── figures/                    # Auto-generated output figures (PNG + PDF, 300 dpi)
+│   ├── fig1_sample_flow.png    # Sample construction funnel diagram
+│   ├── fig2_causal_dag.png     # Directed Acyclic Graph (DAG) of the causal structure
+│   ├── fig3_forest_comparison.png   # OLS vs. DML vs. CausalForest ATE comparison
+│   ├── fig4_cate_distribution.png   # Distribution of individual treatment effects (CATE)
+│   ├── fig5_heterogeneity.png       # CATE vs. tenure, audience size, past gains
+│   ├── fig6_feature_importances.png # CATE heterogeneity feature importances
+│   └── fig7_spec_curve.png          # Specification curve across all 24 robustness checks
 │
 ├── tests/
-│   └── test_features.py        # Unit tests for feature engineering
+│   └── test_features.py        # Unit tests for lag correctness, row preservation, and tenure logic
 │
-├── Documentation/              # Supplementary reports and presentations
-│   ├── New_report_updated.pdf
-│   ├── New_report_updated.docx
-│   └── *.pptx                  # Presentation decks
-│
-├── run_pipeline.py             # Main CLI entry point (end-to-end pipeline)
-├── convert_to_docx.py          # Utility: convert report.md to .docx
-├── report.md                   # Full academic report (Markdown)
-├── trader_data_exl.csv         # Raw dataset (~252 MB, 1,314,404 rows)
-├── requirements.txt            # Core dependencies
-├── requirements_frozen.txt     # Fully pinned/frozen environment
+├── run_pipeline.py             # End-to-end CLI runner: cleaning -> features -> models -> figures
+├── requirements.txt            # Core Python dependencies
+├── requirements_frozen.txt     # Fully pinned environment for exact reproducibility
+├── requirements_f.txt          # Alternative frozen requirements
 └── README.md                   # This file
 ```
 
@@ -69,11 +59,11 @@ This project investigates the **causal effect of self-trading intensity on trade
 
 ## Research Design
 
-### Data
+### Dataset
 
 | Attribute | Value |
 |-----------|-------|
-| **Source** | XTrader social trading platform (Mani et al.) |
+| **Platform** | XTrader social trading platform (Mani et al.) |
 | **Raw rows** | 1,314,404 |
 | **Analysis sample** | **1,196,100** trader-week observations |
 | **Unique traders** | 26,580 |
@@ -84,26 +74,26 @@ This project investigates the **causal effect of self-trading intensity on trade
 
 | Variable | Definition |
 |----------|------------|
-| **Treatment** | `total_self_trxn` — number of self-executed trades in a given trader-week |
-| **Outcome** | `total_gain_loss` — total financial gain/loss (USD) in a given trader-week |
+| **Treatment (T)** | `total_self_trxn` — number of self-executed trades in a given trader-week |
+| **Outcome (Y)** | `total_gain_loss` — total financial gain/loss (USD) in a given trader-week |
 
-### Causal Identification Strategy
+### Identification Strategy
 
 ```
-1. Naive OLS          -> Baseline, endogeneity-biased estimate
-2. LinearDML          -> Double ML: residualizes treatment & outcome on confounders
-3. LinearDML (FE)     -> + within-trader fixed effects via demeaning
-4. CausalForestDML    -> Non-parametric, heterogeneous treatment effects (CATE)
+Step 1: Naive OLS          -> Biased baseline (no confounder control)
+Step 2: LinearDML          -> Residualizes T and Y on confounders via gradient boosting
+Step 3: LinearDML + FE     -> Adds within-trader fixed effects via demeaning
+Step 4: CausalForestDML    -> Non-parametric heterogeneous treatment effects (CATE)
 ```
 
 ### Confounders Controlled
 
-- Lagged self-trades (`total_self_trxn_lag1`)
-- Lagged gains (`total_gain_loss_lag1`)
-- Copier audience size (`audience_size`)
-- Trader activity level (`total_trxn_lag1`)
-- Platform tenure (weeks since first activity)
-- Country fixed effects (via one-hot dummies)
+- `total_self_trxn_lag1` — lagged self-trade count (prior week)
+- `total_gain_loss_lag1` — lagged gains (prior week)
+- `audience_size` — number of copiers following the trader
+- `total_trxn_lag1` — lagged total activity level
+- `tenure` — weeks since the trader's first platform activity
+- Country fixed effects via one-hot encoding
 
 ---
 
@@ -111,16 +101,16 @@ This project investigates the **causal effect of self-trading intensity on trade
 
 | Model | ATE Estimate | 95% CI | Notes |
 |-------|-------------|--------|-------|
-| Naive OLS | -0.56 | — | Endogeneity-biased |
-| LinearDML | -0.60 | [-0.70, -0.50] | Flexible nuisance learners |
-| LinearDML (FE) | **-0.5884** | **[-0.69, -0.49]** | Within-trader demeaned |
-| CausalForestDML | -0.60 (median) | — | Heterogeneous effects |
+| Naive OLS | -0.56 | — | Confounded baseline |
+| LinearDML | -0.60 | [-0.70, -0.50] | LightGBM nuisance learners |
+| LinearDML + FE | **-0.5884** | **[-0.69, -0.49]** | Within-trader demeaned |
+| CausalForestDML | -0.60 (median) | — | Individual-level CATE |
 
-**Treatment Effect Heterogeneity (CATE):**
-- **64.6%** of trader-weeks have **negative** treatment effects
-- **35.4%** of trader-weeks have **positive** treatment effects
-- **Tenure** is the dominant moderator (81.2% feature importance)
-- Mid-career traders (4-6 months) suffer the largest losses from self-trading
+**Heterogeneity (CATE):**
+- **64.6%** of trader-weeks show a negative treatment effect
+- **35.4%** of trader-weeks show a positive treatment effect
+- **Tenure** is the dominant moderator — **81.2% feature importance**
+- Mid-career traders (4-6 months) suffer the largest penalty from self-trading
 
 ---
 
@@ -129,15 +119,15 @@ This project investigates the **causal effect of self-trading intensity on trade
 ### 1. Clone the repository
 
 ```bash
-git clone <repo-url>
-cd "11. anti"
+git clone https://github.com/t20071/Social_Trading_DML.git
+cd Social_Trading_DML
 ```
 
 ### 2. Create & activate the conda environment
 
 ```bash
-conda create -p ./evn python=3.10 -y
-conda activate ./evn
+conda create -n social_trading_dml python=3.10 -y
+conda activate social_trading_dml
 ```
 
 ### 3. Install dependencies
@@ -146,7 +136,7 @@ conda activate ./evn
 pip install -r requirements.txt
 ```
 
-> **Note:** For a fully reproducible environment with pinned versions, use:
+> For exact reproducibility, use the pinned environment:
 > ```bash
 > pip install -r requirements_frozen.txt
 > ```
@@ -155,41 +145,67 @@ pip install -r requirements.txt
 
 ## Running the Pipeline
 
-The full end-to-end analysis is controlled by `run_pipeline.py`:
-
 ```bash
-# Full pipeline (cleaning -> features -> models -> robustness -> figures -> report)
+# Full pipeline: cleaning -> features -> models -> robustness -> figures
 python run_pipeline.py
 
-# Skip the robustness grid (faster, ~2 minutes)
+# Skip robustness grid (faster, ~2 min)
 python run_pipeline.py --skip-robustness
 
-# Subsample for quick testing
+# Quick test on a subsample
 python run_pipeline.py --subsample 50000
 
-# Force re-fitting all models (ignore cached results)
+# Force re-fit all models (ignore cache)
 python run_pipeline.py --force-refit
 ```
 
-**Pipeline steps:**
-1. **Data loading & cleaning** (`src/data_loading.py`)
-2. **Feature engineering** (`src/features.py`) — lag construction, tenure, country dummies
-3. **Treatment & outcome construction** (`src/treatment_outcome.py`) — demeaning, collapse
-4. **Model fitting** (`src/models.py`) — OLS, LinearDML, CausalForestDML
-5. **Robustness checks** (`src/robustness.py`) — 24-specification grid, DoWhy refutations
-6. **Figure generation** (`src/viz.py`) — journal-quality outputs saved to `figures/`
+> Full pipeline runtime on the complete 1.2M observation dataset: ~5 minutes.
 
-> Full pipeline runtime: ~5 minutes on the complete 1.2M observation dataset.
+---
+
+## Code File Reference
+
+### `src/` — Analysis Modules
+
+| File | One-line Description |
+|------|----------------------|
+| `src/__init__.py` | Package entry point; declares module list and version (`1.0.0`) |
+| `src/data_loading.py` | Loads the raw XTrader CSV, applies `keep_country` filter, drops lag-missingness rows, and caches to Parquet |
+| `src/features.py` | Engineers one-period lagged confounders, computes trader tenure, and one-hot encodes country buckets |
+| `src/treatment_outcome.py` | Constructs the treatment (`total_self_trxn`), outcome (`total_gain_loss`), and applies within-trader demeaning for fixed-effects identification |
+| `src/models.py` | Fits Naive OLS, LinearDML (ATE with LightGBM/HistGBR nuisance learners), and CausalForestDML (CATE) with model caching |
+| `src/robustness.py` | Executes the 24-specification robustness grid (treatment type x learner x sample x country controls) plus DoWhy refutation tests and overlap checks |
+| `src/viz.py` | Produces all 7 journal-quality figures (300 dpi PNG + vector PDF) with colorblind-safe palette and confidence intervals |
+
+### Root-level Scripts
+
+| File | One-line Description |
+|------|----------------------|
+| `run_pipeline.py` | CLI entry point that orchestrates all pipeline steps end-to-end with `--skip-robustness`, `--subsample`, and `--force-refit` flags |
+
+### Notebooks
+
+| File | One-line Description |
+|------|----------------------|
+| `notebooks/01_eda.ipynb` | Exploratory analysis of trader distributions, treatment/outcome skew, panel balance, and missingness patterns |
+| `notebooks/02_main_results.ipynb` | Runs and displays the main OLS, LinearDML, and CausalForest estimates with formatted results tables |
+| `notebooks/03_robustness.ipynb` | Visualises the 24-specification curve, overlap diagnostics, and DoWhy sensitivity results |
+
+### Tests
+
+| File | One-line Description |
+|------|----------------------|
+| `tests/test_features.py` | Unit tests verifying lag formula correctness, row-count preservation, and tenure computation logic |
 
 ---
 
 ## Notebooks
 
-| Notebook | Description |
-|----------|-------------|
-| `01_eda.ipynb` | Exploratory data analysis: distributions, missing data, panel structure |
-| `02_main_results.ipynb` | Main causal estimates: OLS, LinearDML, CausalForest |
-| `03_robustness.ipynb` | Robustness grid, overlap diagnostics, DoWhy refutations |
+Run Jupyter from the project root:
+
+```bash
+jupyter notebook notebooks/
+```
 
 ---
 
@@ -199,55 +215,20 @@ python run_pipeline.py --force-refit
 pytest tests/ -v
 ```
 
-Tests cover feature engineering, lag construction, and treatment/outcome computation.
-
----
-
-## Documentation & Outputs
-
-| File | Description |
-|------|-------------|
-| `report.md` | Full academic report with methodology, results & discussion |
-| `Documentation/New_report_updated.pdf` | PDF version of the full report |
-| `Documentation/New_report_updated.docx` | Word version of the full report |
-| `Documentation/*.pptx` | Presentation decks (Gamma, Gemini, Napkin AI versions) |
-
-To regenerate the `.docx` from `report.md`:
-
-```bash
-python convert_to_docx.py
-```
-
 ---
 
 ## Key Dependencies
 
-| Package | Purpose |
-|---------|---------|
-| `econml >= 0.15` | LinearDML & CausalForestDML |
-| `dowhy >= 0.11` | DoWhy refutation tests |
-| `lightgbm >= 4.0` | Gradient-boosted nuisance learners |
-| `scikit-learn >= 1.3` | ML utilities & HistGradientBoosting |
-| `statsmodels >= 0.14` | OLS & statistical tests |
-| `pandas >= 2.0` | Data manipulation |
-| `matplotlib >= 3.8` | Visualization |
-| `networkx >= 3.2` | Causal DAG visualization |
-
----
-
-## Causal DAG
-
-The identification strategy is grounded in a Directed Acyclic Graph (DAG) where confounders are explicitly modeled. See `figures/fig2_causal_dag.png` for the full visualization.
-
-```
-[Audience Size] --------------------------------------------> [Gains (Y)]
-[Past Activity] ---------------------------------> [Gains (Y)]
-[Past Gains]    ------------> [Confounders (W)] -> [Gains (Y)]
-[Tenure]        --------------------------------> [Gains (Y)]
-[Country]       -----------------------------> [Gains (Y)]
-
-[Self-Trades (T)] -----------------------------------------> [Gains (Y)]
-```
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `econml` | >= 0.15 | LinearDML and CausalForestDML |
+| `dowhy` | >= 0.11 | Refutation tests for causal assumptions |
+| `lightgbm` | >= 4.0 | Gradient-boosted nuisance learners |
+| `scikit-learn` | >= 1.3 | HistGradientBoosting and ML utilities |
+| `statsmodels` | >= 0.14 | Naive OLS and statistical diagnostics |
+| `pandas` | >= 2.0 | Panel data manipulation |
+| `matplotlib` | >= 3.8 | Figure rendering |
+| `networkx` | >= 3.2 | Causal DAG visualization |
 
 ---
 
@@ -255,46 +236,43 @@ The identification strategy is grounded in a Directed Acyclic Graph (DAG) where 
 
 | Method | Reference |
 |--------|-----------|
-| Double Machine Learning (DML) | Chernozhukov et al. (2018), *Econometrics Journal* |
+| Double Machine Learning | Chernozhukov et al. (2018), *Econometrics Journal* |
 | Causal Forests | Athey & Wager (2019), *PNAS* |
 | Trading & Overconfidence | Barber & Odean (2000), *Journal of Finance* |
-| Social Trading Data | Mani et al., XTrader Platform |
+| Dataset | Mani et al., XTrader Social Trading Platform |
 
 ---
 
 ## Key Recommendations
 
-Based on the causal analysis:
-
-1. **Platform designers** — Implement nudge interventions for traders with < 6 months tenure to encourage copy-trading over self-trading.
-2. **Traders** — Self-trading is, on average, a losing strategy. Allocate more activity to copy-trading, especially early in your career.
-3. **Regulators** — Consider mandating disclosure of individual-level self-trading performance statistics to enable informed decision-making.
+1. **Platform designers** — Nudge traders with < 6 months tenure toward copy-trading; they incur the largest self-trading penalties.
+2. **Traders** — Self-trading is on average loss-generating; consider relying more on copy-trading strategies early in your career.
+3. **Regulators** — Mandate disclosure of individual self-trading performance so users can make informed decisions.
 
 ---
 
 ## Limitations
 
-- Unobserved time-varying confounders remain even after within-trader demeaning
-- SUTVA violations possible due to network effects on copy-trading
-- External validity limited to XTrader platform, 2013 data
-- Linear dose-response assumed for the ATE; CausalForest partially relaxes this
+- Time-varying unobserved confounders remain even after within-trader demeaning
+- SUTVA may be violated due to copy-trading network interference
+- Results are specific to XTrader platform (2013); external validity requires caution
+- Linear dose-response assumed for ATE; CausalForest partially relaxes this assumption
 
 ---
 
 ## Citation
 
-If you use this code or findings in your research, please cite:
-
 ```bibtex
 @misc{selftrading_causalml_2026,
-  title   = {Does Self-Trading Intensity Affect Trader Gains?
-             A Causal Machine Learning Analysis of Social Trading},
-  year    = {2026},
-  note    = {Double Machine Learning with within-trader fixed effects
-             applied to the XTrader social trading platform dataset}
+  title = {Does Self-Trading Intensity Affect Trader Gains?
+           A Causal Machine Learning Analysis of Social Trading},
+  year  = {2026},
+  note  = {Double Machine Learning with within-trader fixed effects
+           applied to the XTrader social trading platform dataset.
+           Code: https://github.com/t20071/Social_Trading_DML}
 }
 ```
 
 ---
 
-*Analysis completed: 2026-08-19 | Pipeline runtime: ~5.1 minutes | Dataset: 1,196,100 trader-week observations*
+*Pipeline completed: 2026-08-19 | Runtime: ~5.1 min | Sample: 1,196,100 trader-week observations across 26,580 traders*
