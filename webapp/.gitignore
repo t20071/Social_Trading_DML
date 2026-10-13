@@ -1,0 +1,2 @@
+# Bundled results stay off GitHub; rebuild with `python webapp/export_data.py`
+data.js

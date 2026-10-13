@@ -1,44 +1,43 @@
-# === Excluded data & large files ===
-trader_data_exl.csv
-notebooks/trader_data_exl.csv
+# === Local-only data: raw export, cleaned panel, model cache (see README) ===
+/data/
+*.csv.gz
+/trader_data_exl.csv
 
-# === Excluded folders ===
-data/
-Documentation/
-evn/
+# === Local-only documents (author's drafts, decks, reference paper, v1 archive) ===
+/Documentation/
 
-# === Excluded scripts/docs ===
-report.md
-convert_to_docx.py
-New_report_updated.docx
-~\.docx
+# === Generated outputs: results and the report stay local; figures are published ===
+/results/
+/reports/*
+!/reports/figures/
 
-# === Python cache ===
+# === Claude Code configuration (agents, skills, project notes): kept private ===
+/.claude/
+
+# === Scratch outputs (e.g. smoke runs with --results-dir scratch/...) ===
+/scratch/
+
+# === Python ===
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-.Python
+*.egg-info/
+build/
+dist/
+.pytest_cache/
 
 # === Jupyter ===
 .ipynb_checkpoints/
-*.ipynb_checkpoints
 
-# === Virtual environments ===
+# === Environments ===
 venv/
+.venv/
 env/
-.env/
-*.egg-info/
+evn/
 
-# === OS & editor ===
+# === OS / editor / Office lock files ===
 .DS_Store
 Thumbs.db
 *.swp
-*.swo
 .vscode/
 .idea/
-
-# === Build & dist ===
-build/
-dist/
-*.egg
+~$*

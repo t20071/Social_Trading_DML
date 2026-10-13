@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Self-Trading Explorer</title>
+  <meta name="description" content="Interactive explorer for a causal machine learning study of self-trading and trader gains on the XTrader social trading platform.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1020'/%3E%3Cpath d='M6 22 L12 14 L17 18 L26 8' stroke='%235b9cff' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo"></span>Self-Trading Explorer</div>
+    <nav>
+      <a href="#run">Run</a>
+      <a href="#data">Data</a>
+      <a href="#uncertainty">Uncertainty</a>
+      <a href="#decomposition">Decomposition</a>
+      <a href="#pnl">P&amp;L</a>
+      <a href="#heterogeneity">Heterogeneity</a>
+      <a href="#robustness">Robustness</a>
+      <a href="#feedback">Feedback</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- HERO + PIPELINE REPLAY -->
+    <section class="hero" id="run">
+      <div class="hero-text">
+        <p class="eyebrow">Causal machine learning · XTrader panel · 2013</p>
+        <h1>Does trading on your own account change what you earn?</h1>
+        <p class="lead">Double Machine Learning with trader and week fixed effects on <strong id="hero-rows">—</strong> trader-weeks from <strong id="hero-traders">—</strong> traders. Press run to replay the analysis stage by stage, then explore every result.</p>
+        <div class="hero-actions">
+          <button class="btn primary" id="run-btn"><span class="play"></span>Run the analysis</button>
+          <button class="btn ghost" id="skip-btn">Skip to results</button>
+        </div>
+        <p class="fineprint">The replay walks through the logged pipeline run. Every number comes from <code>results/</code>; nothing is re-estimated in the browser.</p>
+      </div>
+      <div class="console card" aria-live="polite">
+        <div class="console-head">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="console-title">run_pipeline.py</span>
+          <span class="console-status" id="console-status">idle</span>
+        </div>
+        <div class="stages" id="stages"></div>
+        <pre class="log" id="log"><span class="muted">$ python run_pipeline.py</span></pre>
+      </div>
+    </section>
+
+    <section class="kpis" id="kpis">
+      <div class="kpi"><div class="kpi-label">Pooled effect per extra self-trade</div><div class="kpi-value" data-kpi="pooled">—</div><div class="kpi-sub" data-kpi-sub="pooled"></div></div>
+      <div class="kpi early"><div class="kpi-label">Jan – mid-Jun 2013 (periods 31–53)</div><div class="kpi-value" data-kpi="early">—</div><div class="kpi-sub" data-kpi-sub="early"></div></div>
+      <div class="kpi late"><div class="kpi-label">Last 3 weeks (periods 73–75)</div><div class="kpi-value" data-kpi="late">—</div><div class="kpi-sub" data-kpi-sub="late"></div></div>
+      <div class="kpi"><div class="kpi-label">Effective number of weeks</div><div class="kpi-value" data-kpi="geff">—</div><div class="kpi-sub" data-kpi-sub="geff"></div></div>
+    </section>
+
+    <!-- DATA -->
+    <section class="panel" id="data">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">1 · The data</p>
+          <h2>Self-trading happens in bursts</h2>
+          <p class="sub">Each bar is one week (a "period"). Self-trading fades after mid-June, almost vanishes for four months, then explodes in the last three weeks. Those three weeks hold two-thirds of all self-trades.</p>
+        </div>
+        <div class="seg" data-target="activity">
+          <button class="on" data-v="trades">Self-trades</button>
+          <button data-v="active">% trader-weeks active</button>
+          <button data-v="pnl">Raw P&amp;L per self-trade</button>
+        </div>
+      </div>
+      <div class="chart" id="chart-activity"></div>
+      <div class="facts" id="data-facts"></div>
+    </section>
+
+    <!-- UNCERTAINTY -->
+    <section class="panel" id="uncertainty">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">2 · One number, three kinds of uncertainty</p>
+          <h2>How sure are we about −5.44?</h2>
+          <p class="sub">Trader-clustered intervals assume traders are independent within a week. Market-wide shocks break that, and the variation comes from only about four effective weeks. Switch the inference and watch the intervals grow.</p>
+        </div>
+        <div class="seg" data-target="ci">
+          <button class="on" data-v="trader">Trader-clustered</button>
+          <button data-v="twoway">Trader × week</button>
+          <button data-v="wild">Week wild bootstrap</button>
+        </div>
+      </div>
+      <div class="chart" id="chart-ci"></div>
+      <p class="note" id="ci-note"></p>
+    </section>
+
+    <!-- DECOMPOSITION -->
+    <section class="panel" id="decomposition">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">3 · Where the estimate comes from</p>
+          <h2>A weighted average of two regimes</h2>
+          <p class="sub">The pooled estimate is exactly a weighted average of week-by-week contributions. Change the weighting and the "answer" moves from −5 to −13. Hover a week to see what happens without it.</p>
+        </div>
+        <div class="seg" data-target="agg">
+          <button class="on" data-v="variance_weighted">Variance-weighted (DML)</button>
+          <button data-v="trade_weighted">By self-trades</button>
+          <button data-v="equal_week">Equal per week</button>
+        </div>
+      </div>
+      <div class="chart" id="chart-decomp"></div>
+      <div class="blocks" id="block-cards"></div>
+    </section>
+
+    <!-- P&L -->
+    <section class="panel" id="pnl">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">4 · What the effect consists of</p>
+          <h2>The estimate is the P&amp;L of the marginal trade</h2>
+          <p class="sub">Each dot is a week with at least 100 self-trades. On the x-axis is the raw average P&amp;L per self-trade, straight from the data with no model. On the y-axis is the model's week contribution. They line up.</p>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="chart" id="chart-pnl"></div>
+        <div class="side">
+          <div class="stat-big" id="pnl-corr"></div>
+          <table class="tbl" id="pnl-table"></table>
+          <div class="callout" id="crowding"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HETEROGENEITY -->
+    <section class="panel" id="heterogeneity">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">5 · Heterogeneity on held-out traders</p>
+          <h2>"Different traders" turn out to be different weeks</h2>
+          <p class="sub">A causal forest was fit on half the traders and tested on the other half. Its quartiles differ sharply, but the colour shows why: the less-negative quartiles trade almost entirely in the final three weeks.</p>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="chart" id="chart-gates"></div>
+        <div class="side">
+          <h3 class="mini">What the forest learned</h3>
+          <div class="chart small" id="chart-importance"></div>
+          <h3 class="mini">Moderators, holding the calendar fixed</h3>
+          <table class="tbl" id="mod-table"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROBUSTNESS -->
+    <section class="panel" id="robustness">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">6 · Robustness</p>
+          <h2>Always negative, rarely significant</h2>
+          <p class="sub">24 specifications (treatment × learner × sample × outcome), grouped by scale. Dark ticks are trader-clustered CIs; light bands are week-bootstrap CIs.</p>
+        </div>
+        <div class="seg" data-target="spec" id="spec-tabs"></div>
+      </div>
+      <div class="chart" id="chart-spec"></div>
+      <h3 class="mini">Single-change checks (same scale as the primary estimate)</h3>
+      <div class="chart" id="chart-checks"></div>
+    </section>
+
+    <!-- FEEDBACK -->
+    <section class="panel" id="feedback">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">7 · Identification</p>
+          <h2>Strict exogeneity fails</h2>
+          <p class="sub">Next week's self-trades predict this week's gains, consistent with gains feeding back into later trading. The estimator that stays valid under this feedback (Anderson–Hsiao, instrumented by self-trades two weeks earlier) cannot tell the sign.</p>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="chart" id="chart-feedback"></div>
+        <div class="side" id="feedback-side"></div>
+      </div>
+    </section>
+
+    <section class="verdict">
+      <h2>Bottom line</h2>
+      <div class="verdict-grid">
+        <div class="v ok"><h3>Supported</h3><ul id="v-yes"></ul></div>
+        <div class="v no"><h3>Not supported</h3><ul id="v-no"></ul></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p id="provenance"></p>
+    <p>Data: Mani et al., XTrader panel (unpublished manuscript). Method: LinearDML (econml) with two-way fixed effects, trader-grouped cross-fitting and a week wild cluster bootstrap.</p>
+  </footer>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

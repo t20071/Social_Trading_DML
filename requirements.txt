@@ -1,36 +1,81 @@
-# Causal ML Analysis: Self-Trading → Trader Gains
-# Environment: conda create -p ./venv python=3.10
-# Install: pip install -r requirements.txt
-
-# Core data
-pandas>=2.0
-numpy>=1.24
-openpyxl>=3.1
-pyarrow>=14.0
-
-# Scientific computing
-scipy>=1.11
-scikit-learn>=1.3 
-
-# Causal ML
-econml>=0.15
-lightgbm>=4.0
-dowhy>=0.11
-
-# Statistics
-statsmodels>=0.14
-
-# Visualization
-matplotlib>=3.8
-seaborn>=0.13
-
-# DAG visualization
-networkx>=3.2
-graphviz>=0.20
-
-# Jupyter
-jupyter>=1.0
-ipykernel>=6.25
-
-# Testing
-pytest>=7.4
+asttokens==3.0.2
+attrs==26.1.0
+beautifulsoup4==4.15.0
+bleach==6.4.0
+cloudpickle==3.1.2
+colorama==0.4.6
+comm==0.2.3
+contourpy==1.3.3
+cycler==0.12.1
+debugpy==1.8.22
+defusedxml==0.7.1
+econml==0.17.0
+executing==2.3.0
+fastjsonschema==2.22.2
+fonttools==4.66.1
+iniconfig==2.3.1
+ipykernel==7.4.0
+ipython==9.17.1
+ipython_pygments_lexers==1.1.1
+jedi==0.20.0
+Jinja2==3.1.6
+joblib==1.6.0
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+jupyter_client==8.10.0
+jupyter_core==5.9.1
+jupyterlab_pygments==0.3.0
+kiwisolver==1.5.1
+lightgbm==4.7.0
+llvmlite==0.50.0
+MarkupSafe==3.0.4
+matplotlib==3.10.9
+matplotlib-inline==0.2.2
+mistune==3.3.4
+narwhals==2.27.1
+nbclient==0.11.0
+nbconvert==7.17.1
+nbformat==5.11.1
+nest-asyncio2==1.7.4
+networkx==3.4.2
+numba==0.68.0
+numpy==2.2.6
+packaging==26.3
+pandas==2.3.3
+pandocfilters==1.5.1
+parso==0.8.7
+patsy==1.0.3
+pillow==12.3.0
+platformdirs==4.13.0
+pluggy==1.6.0
+prompt_toolkit==3.0.53
+psutil==7.2.2
+pure_eval==0.2.4
+pyarrow==24.0.0
+Pygments==2.21.0
+pyparsing==3.3.3
+pytest==9.1.1
+python-dateutil==2.9.0.post0
+pytz==2026.5
+pyzmq==27.2.0
+referencing==0.37.0
+rpds-py==0.28.0
+scikit-learn==1.7.2
+scipy==1.15.3
+seaborn==0.13.2
+shap==0.51.0
+six==1.17.0
+slicer==0.0.8
+soupsieve==3.0.2
+sparse==0.19.2
+stack-data==0.6.3
+statsmodels==0.14.6
+threadpoolctl==3.7.0
+tinycss2==1.5.1
+tornado==6.5.10
+tqdm==4.70.1
+traitlets==5.16.1
+typing_extensions==4.16.0
+tzdata==2026.5
+wcwidth==0.9.2
+webencodings==0.6.1
